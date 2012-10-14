@@ -2,8 +2,18 @@
 	font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
 
+.faqify_arrow_right {
+	display: inline-block;
+	margin-right: 5px;
+	width: 0; 
+	height: 0; 
+	border-top: 5px solid transparent;
+	border-bottom: 5px solid transparent;
+	border-left: 5px solid black;
+}
+
 #faqify {
-	left: 100;
+	left: 100px;
 	bottom: 0;
 	position: absolute;
 	.arrow_down {
@@ -27,6 +37,7 @@
 		border-bottom: 10px solid white;
 	}
 	#faqify_actions {
+		background-color: white;
 		display: none;
 		padding-top: 5px;
 		padding-bottom: 5px;
@@ -50,6 +61,7 @@
 		}
 	}
 	#faqify_list {
+		background-color: white;
 		list-style-type: none;
 		margin: 0;
 		padding: 0;
@@ -59,6 +71,7 @@
 		height: 250px;
 		overflow-y: auto;
 		li {
+			background-color: white;
 			cursor: pointer;
 			font-size: 16px;
 			padding: 10px 5px 10px;
@@ -71,11 +84,12 @@
 }
 
 #faqify_modal {
+	font-size: 16px;
 	padding: 20px;
 	border-radius: 5px;
 	background-color: white;
 	position: absolute;
-	top: 100;
+	top: 100px;
 	left: 0;
 	display: none;
 	width: 600px;
@@ -114,6 +128,9 @@
 		}
 	}
 	#view_question_modal {
+		h2 {
+			margin-bottom: 10px;
+		}
 		textarea {
 			height: 75px;
 			width: 400px;
@@ -123,11 +140,18 @@
 			margin: 5px 0px 0px 0px;
 		}
 		.answers {
-			margin-left: -20px;
+			margin: 0;
+			padding-left: 0;
 			list-style-type: decimal;
 			max-height: 100px;
 			overflow-y: auto;
 			margin-bottom: 20px;
+			li {
+				margin-top: 10px;
+			}
+		}
+		.answer_header {
+			margin-top: 10px;
 		}
 	}
 }

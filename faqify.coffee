@@ -32,7 +32,7 @@ class Faqify
 		<div id='view_question_modal' data-question_id='#{question._id}'>
 		<h2>Q: #{question.title}</h2>
 		<p>#{question.description}</p>
-		<h2>Answers</h2>
+		<h2 class='answer_header'>Answers</h2>
 		#{if question.answers.length is 0 then '<p class="no_answers">No answers yet</p>' else ''}
 		<ul class='answers'></ul>
 		<form>
@@ -79,7 +79,7 @@ class Faqify
 		question = @findQuestion($(event.currentTarget).data('question_id'))
 		$('#faqify_modal').css({left: centerModal}).html('').html(@viewQuestionHtml(question))
 		for answer in question.answers
-			answerLi = "<li>#{answer.description}</li>"
+			answerLi = "<li><div class='faqify_arrow_right'></div>#{answer.description}</li>"
 			$('#view_question_modal .answers').append(answerLi)
 		$('#faqify_modal').show()
 		$('#faqify_modal_background').css({height: $('html').height(), width: $('html').width()}).show()

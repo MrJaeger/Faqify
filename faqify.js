@@ -35,7 +35,7 @@
 
     Faqify.prototype.viewQuestionHtml = function(question) {
       var html;
-      return html = "<div class='remove_modal'>X</div>		<div id='view_question_modal' data-question_id='" + question._id + "'>		<h2>Q: " + question.title + "</h2>		<p>" + question.description + "</p>		<h2>Answers</h2>		" + (question.answers.length === 0 ? '<p class="no_answers">No answers yet</p>' : '') + "		<ul class='answers'></ul>		<form>			<textarea placeholder='Post an answer' name='faqify_description'></textarea>			<button id='answer_button'>Post Answer</button>		</form>		</div>";
+      return html = "<div class='remove_modal'>X</div>		<div id='view_question_modal' data-question_id='" + question._id + "'>		<h2>Q: " + question.title + "</h2>		<p>" + question.description + "</p>		<h2 class='answer_header'>Answers</h2>		" + (question.answers.length === 0 ? '<p class="no_answers">No answers yet</p>' : '') + "		<ul class='answers'></ul>		<form>			<textarea placeholder='Post an answer' name='faqify_description'></textarea>			<button id='answer_button'>Post Answer</button>		</form>		</div>";
     };
 
     function Faqify(apiKey) {
@@ -100,7 +100,7 @@
       _ref = question.answers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         answer = _ref[_i];
-        answerLi = "<li>" + answer.description + "</li>";
+        answerLi = "<li><div class='faqify_arrow_right'></div>" + answer.description + "</li>";
         $('#view_question_modal .answers').append(answerLi);
       }
       $('#faqify_modal').show();
