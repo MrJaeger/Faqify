@@ -1,4 +1,4 @@
-# Backbone-Tracking
+# Faqify
 
 Allowing any site to have a user-driven FAQ system.
 
