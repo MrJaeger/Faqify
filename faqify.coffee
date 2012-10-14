@@ -98,8 +98,9 @@ class Faqify
 			realQuestion = question.question
 			@questions.push(realQuestion)
 			li = "<li data-question_id='#{realQuestion._id}'>#{realQuestion.title}</li>"
-			console.log(li)
 			$('#faqify_list').prepend(li)
+			@close()
+			$("#faqify li[data-question_id='#{realQuestion._id}']").click()
 		errorCb = (a,b,c)-> console.log(a,b,c)
 		$.ajax {
 			url: "#{baseUrl}/questions"

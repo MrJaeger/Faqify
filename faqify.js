@@ -129,8 +129,9 @@
         realQuestion = question.question;
         _this.questions.push(realQuestion);
         li = "<li data-question_id='" + realQuestion._id + "'>" + realQuestion.title + "</li>";
-        console.log(li);
-        return $('#faqify_list').prepend(li);
+        $('#faqify_list').prepend(li);
+        _this.close();
+        return $("#faqify li[data-question_id='" + realQuestion._id + "']").click();
       };
       errorCb = function(a, b, c) {
         return console.log(a, b, c);
