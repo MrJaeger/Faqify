@@ -121,7 +121,7 @@ class Faqify
 			question = @findQuestion(question_id)
 			question.answers.push(realAnswer)
 			$('#view_question_modal .no_answers').remove()
-			answerLi = "<li>#{realAnswer.description}</li>"
+			answerLi = "<li><div class='faqify_arrow_right'>#{realAnswer.description}</li>"
 			$('#view_question_modal .answers').append(answerLi)
 		errorCb = (a,b,c)-> console.log(a,b,c)
 		$.ajax {

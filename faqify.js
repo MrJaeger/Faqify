@@ -160,7 +160,7 @@
         question = _this.findQuestion(question_id);
         question.answers.push(realAnswer);
         $('#view_question_modal .no_answers').remove();
-        answerLi = "<li>" + realAnswer.description + "</li>";
+        answerLi = "<li><div class='faqify_arrow_right'>" + realAnswer.description + "</li>";
         return $('#view_question_modal .answers').append(answerLi);
       };
       errorCb = function(a, b, c) {
