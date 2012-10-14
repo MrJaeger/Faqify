@@ -1,5 +1,5 @@
 class Faqify
-	baseUrl: 'http://localhost:8000'
+	baseUrl: 'http://tranquil-dusk-4165.herokuapp.com'
 	isOpen: false
 
 	baseHtml: '<div id="faqify">
