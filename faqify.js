@@ -63,7 +63,6 @@
     };
 
     Faqify.prototype.open = function() {
-      $('#faqify').css('width', '250px');
       $('#faqify_header .arrow_up').removeClass('arrow_up').addClass('arrow_down');
       $('#faqify_actions').show();
       $('#faqify_list').show();

@@ -38,6 +38,7 @@
 	}
 	#faqify_actions {
 		background-color: white;
+		width: 250px;
 		display: none;
 		padding-top: 5px;
 		padding-bottom: 5px;
@@ -52,12 +53,17 @@
 	}
 	#faqify_header {
 		cursor: pointer;
-		border: 1px solid #DEDEDE;
+		width: 247px;
+		border-radius: 5px 5px 0px 0px;
 		background-color: #35B9DE;
 		padding: 5px;
 		span {
 			color: white;
 			font-weight: 400;
+		}
+		.arrow_up {
+			margin-top: 4px;
+			float: right;
 		}
 	}
 	#faqify_list {
@@ -68,6 +74,7 @@
 		display: none;
 		border-left: 1px solid #DEDEDE;
 		border-right: 1px solid #DEDEDE;
+		width: 255px;
 		height: 250px;
 		overflow-y: auto;
 		li {
@@ -79,6 +86,16 @@
 		li:hover {
 			font-weight: 300;
 			background-color: #E6E6E6;
+		}
+		&::-webkit-scrollbar {
+			width: 13px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background: #A3A3A3;
+			border-radius: 5px;
+		}
+		&::-webkit-scrollbar-track {
+			background: #DEDEDE;
 		}
 	}
 }
