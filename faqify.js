@@ -4,7 +4,7 @@
 
   Faqify = (function() {
 
-    Faqify.prototype.baseUrl = 'http://localhost:8000';
+    Faqify.prototype.baseUrl = 'http://tranquil-dusk-4165.herokuapp.com';
 
     Faqify.prototype.isOpen = false;
 
