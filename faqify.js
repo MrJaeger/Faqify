@@ -243,6 +243,7 @@
             realAnswer = answer.answer;
             question = _this.findQuestion(question_id);
             question.answers.push(realAnswer);
+            $('textarea[name="faqify_description"]').val('');
             $('#view_question_modal .no_answers').remove();
             button.html('Saved!');
             answerLi = "<li><div class='faqify_arrow_right'></div>" + realAnswer.description + "</li>";
@@ -377,8 +378,9 @@
         _this.questions = questions.data;
         return _this.populateList();
       };
-      errorCb = function(a, b, c) {
-        return console.log(a, b, c);
+      errorCb = function() {
+        $('#faqify_list').append('<li>Faqify couldn\'t load right now, try refreshing soon!</li>');
+        return this.open();
       };
       return $.ajax({
         url: "" + baseUrl + "/questions",

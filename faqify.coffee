@@ -199,6 +199,7 @@ class Faqify
 					realAnswer = answer.answer
 					question = @findQuestion(question_id)
 					question.answers.push(realAnswer)
+					$('textarea[name="faqify_description"]').val('')
 					$('#view_question_modal .no_answers').remove()
 					button.html('Saved!')
 					answerLi = "<li><div class='faqify_arrow_right'></div>#{realAnswer.description}</li>"
@@ -274,7 +275,9 @@ class Faqify
 		successCb = (questions)=> 
 			@questions = questions.data
 			@populateList()
-		errorCb = (a,b,c)-> console.log(a,b,c)
+		errorCb = ()->
+			$('#faqify_list').append('<li>Faqify couldn\'t load right now, try refreshing soon!</li>')
+			@open()
 		$.ajax {
 			url: "#{baseUrl}/questions"
 			success: successCb
