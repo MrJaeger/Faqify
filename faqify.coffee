@@ -1,6 +1,8 @@
 class Faqify
 	baseUrl: 'http://tranquil-dusk-4165.herokuapp.com'
 	isOpen: false
+	loadingTimeout: 2000
+	buttonChangeTimeout: 1000
 
 	baseHtml: '<div id="faqify">
 		<div id="faqify_header">
@@ -134,7 +136,7 @@ class Faqify
 					setTimeout(->
 						button.css('background-color', currentColor)
 						button.html(currentText)
-					, 1000)
+					, @buttonChangeTimeout)
 				$.ajax {
 					url: "#{baseUrl}/emails"
 					data: data
@@ -142,7 +144,7 @@ class Faqify
 					success: successCb
 					error: errorCb
 				}
-			, 2000)
+			, @loadingTimeout)
 
 	saveQuestion: (event)->
 		event.preventDefault()
@@ -163,14 +165,14 @@ class Faqify
 					$('#ask_question_li ').after(li)
 					button.html('Saved!')
 					button.after("<a href='#' id='go_to_new_question' data-question_id='#{rQ._id}'>Go to Question</a>")
-				errorCb = ()->
+				errorCb = ()=>
 					currentColor = button.css('background-color')
 					button.css('background-color', '#FA4141')
 					button.html('Oops! Try Again')
-					setTimeout(->
+					setTimeout(=>
 						button.css('background-color', currentColor)
 						button.html(currentText)
-					, 1000)
+					, @buttonChangeTimeout)
 
 				$.ajax {
 					url: "#{baseUrl}/questions"
@@ -179,7 +181,7 @@ class Faqify
 					success: successCb
 					error: errorCb
 				}
-			, 2000)
+			, @loadingTimeout)
 
 	saveAnswer: (event)->
 		event.preventDefault()
@@ -193,7 +195,7 @@ class Faqify
 			console.log(currentText)
 			button.html(@savingHtml("Saving"))
 			baseUrl = @baseUrl
-			setTimeout( =>
+			setTimeout(=>
 				successCb = (answer)=>
 					realAnswer = answer.answer
 					question = @findQuestion(question_id)
@@ -203,14 +205,14 @@ class Faqify
 					button.html('Saved!')
 					answerLi = "<li><div class='faqify_arrow_right'></div>#{realAnswer.description}</li>"
 					$('#view_question_modal .answers').append(answerLi)
-				errorCb = ->
+				errorCb = =>
 					currentColor = button.css('background-color')
 					button.css('background-color', '#FA4141')
 					button.html('Oops! Try Again')
-					setTimeout(->
+					setTimeout(=>
 						button.css('background-color', currentColor)
 						button.html(currentText)
-					, 1000)
+					, @buttonChangeTimeout)
 				$.ajax {
 					url: "#{baseUrl}/answers"
 					data: data
@@ -218,7 +220,7 @@ class Faqify
 					success: successCb
 					error: errorCb
 				}
-			, 2000)
+			, @loadingTimeout)
 
 	search: (event)->
 		search = $(event.currentTarget).val()
@@ -239,7 +241,7 @@ class Faqify
 				$('#faqify_header').append('<div class="arrow_down"></div>')
 				@open()
 			) 
-		, 1000)
+		, @buttonChangeTimeout)
 
 	openQuestion: (event)->
 		event.preventDefault()
@@ -271,16 +273,22 @@ class Faqify
 
 	getQuestions: ->
 		baseUrl = @baseUrl
+		$('#faqify_header .arrow_up').remove()
+		$('#faqify_header').append(@loadingHtml)
 		successCb = (questions)=> 
+			$('#faqify_header #circleG').remove()
+			$('#faqify_header').append('<div class="arrow_up"></div>')
 			@questions = questions.data
 			@populateList()
 		errorCb = ()->
 			$('#faqify_list').append('<li>Faqify couldn\'t load right now, try refreshing soon!</li>')
 			@open()
-		$.ajax {
-			url: "#{baseUrl}/questions"
-			success: successCb
-			error: errorCb
-		}
+		setTimeout(=>
+			$.ajax {
+				url: "#{baseUrl}/questions"
+				success: successCb
+				error: errorCb
+			}
+		, @loadingTimeout)
 
 window.Faqify = Faqify

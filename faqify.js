@@ -8,6 +8,10 @@
 
     Faqify.prototype.isOpen = false;
 
+    Faqify.prototype.loadingTimeout = 2000;
+
+    Faqify.prototype.buttonChangeTimeout = 1000;
+
     Faqify.prototype.baseHtml = '<div id="faqify">\
 		<div id="faqify_header">\
 			<span>Check out the FAQ</span>\
@@ -162,7 +166,7 @@
             return setTimeout(function() {
               button.css('background-color', currentColor);
               return button.html(currentText);
-            }, 1000);
+            }, _this.buttonChangeTimeout);
           };
           return $.ajax({
             url: "" + baseUrl + "/emails",
@@ -171,7 +175,7 @@
             success: successCb,
             error: errorCb
           });
-        }, 2000);
+        }, this.loadingTimeout);
       }
     };
 
@@ -208,7 +212,7 @@
             return setTimeout(function() {
               button.css('background-color', currentColor);
               return button.html(currentText);
-            }, 1000);
+            }, _this.buttonChangeTimeout);
           };
           return $.ajax({
             url: "" + baseUrl + "/questions",
@@ -217,7 +221,7 @@
             success: successCb,
             error: errorCb
           });
-        }, 2000);
+        }, this.loadingTimeout);
       }
     };
 
@@ -257,7 +261,7 @@
             return setTimeout(function() {
               button.css('background-color', currentColor);
               return button.html(currentText);
-            }, 1000);
+            }, _this.buttonChangeTimeout);
           };
           return $.ajax({
             url: "" + baseUrl + "/answers",
@@ -266,7 +270,7 @@
             success: successCb,
             error: errorCb
           });
-        }, 2000);
+        }, this.loadingTimeout);
       }
     };
 
@@ -296,7 +300,7 @@
           $('#faqify_header').append('<div class="arrow_down"></div>');
           return _this.open();
         });
-      }, 1000);
+      }, this.buttonChangeTimeout);
     };
 
     Faqify.prototype.openQuestion = function(event) {
@@ -374,7 +378,11 @@
       var baseUrl, errorCb, successCb,
         _this = this;
       baseUrl = this.baseUrl;
+      $('#faqify_header .arrow_up').remove();
+      $('#faqify_header').append(this.loadingHtml);
       successCb = function(questions) {
+        $('#faqify_header #circleG').remove();
+        $('#faqify_header').append('<div class="arrow_up"></div>');
         _this.questions = questions.data;
         return _this.populateList();
       };
@@ -382,11 +390,13 @@
         $('#faqify_list').append('<li>Faqify couldn\'t load right now, try refreshing soon!</li>');
         return this.open();
       };
-      return $.ajax({
-        url: "" + baseUrl + "/questions",
-        success: successCb,
-        error: errorCb
-      });
+      return setTimeout(function() {
+        return $.ajax({
+          url: "" + baseUrl + "/questions",
+          success: successCb,
+          error: errorCb
+        });
+      }, this.loadingTimeout);
     };
 
     return Faqify;
