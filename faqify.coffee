@@ -1,5 +1,6 @@
 class Faqify
-	baseUrl: 'http://tranquil-dusk-4165.herokuapp.com'
+	#baseUrl: 'http://tranquil-dusk-4165.herokuapp.com'
+	baseUrl: 'http://localhost:8000'
 	isOpen: false
 
 	baseHtml: '<div id="faqify">
@@ -43,6 +44,9 @@ class Faqify
 			<textarea placeholder='Post an answer' name='faqify_description'></textarea>
 			<button id='answer_button'>Post Answer</button>
 		</form>
+		<form id='subscribe_form'>
+			<input type='text' placeholder='Enter email here' name='faqify_subscribe' />
+			<button id='subscribe_button'>Subscribe</button>
 		</div>"
 
 	loadingHtml: '
@@ -53,15 +57,14 @@ class Faqify
 		</div>
 	'
 
-	savingHtml: '
-		<div id="saving_animated">
-			<span class="saving_dot">Saving</span>
-			<span class="margin_left saving_dot">.</span>
-			<span class="saving_dot">.</span>
-			<span class="saving_dot">.</span>
+	savingHtml: (text)->
+		html = "<div id='saving_animated'>
+			<span class='saving_dot'>#{text}</span>
+			<span class='margin_left saving_dot'>.</span>
+			<span class='saving_dot'>.</span>
+			<span class='saving_dot'>.</span>
 		</div>
-	'
-
+		"
 	constructor: (@apiKey)->
 		$('body').append(@baseHtml)
 		apiKey = @apiKey
@@ -108,18 +111,52 @@ class Faqify
 		$('#faqify_modal').html('').hide()
 		$('#faqify_modal_background').hide()
 
+	saveSubscription: (event)->
+		event.preventDefault()
+		question_id = $('#view_question_modal').data('question_id')
+		emailInput = $('input[name="faqify_subscribe"]')
+		data =
+			email: emailInput.val() or null
+			question_id: question_id
+		if data.email?
+			button = $(event.currentTarget)
+			currentText = button.html()
+			button.html(@savingHtml("Subscribing"))
+			baseUrl = @baseUrl
+			setTimeout(=>
+				successCb = ()=>
+					emailInput.val('')
+					button.html('Subscribed!')
+				errorCb = (error)=>
+					currentColor = button.css('background-color')
+					button.css('background-color', '#FA4141')
+					errorText = if error.status == 403 then "Already Subscribed" else "Oops! Try Again"
+					button.html(errorText)
+					setTimeout(->
+						button.css('background-color', currentColor)
+						button.html(currentText)
+					, 1000)
+				$.ajax {
+					url: "#{baseUrl}/emails"
+					data: data
+					type: 'POST'
+					success: successCb
+					error: errorCb
+				}
+			, 2000)
+
 	saveQuestion: (event)->
 		event.preventDefault()
 		data =
 			title: $('input[name="faqify_title"]').val() or null
 			description: $('textarea[name="faqify_description"]').val() or null
 			email: $('input[name="faqify_email"]').val()
-		console.log()
 		if data.title? and data.description?
 			button = $(event.currentTarget)
-			button.html(@savingHtml)
+			currentText = button.html()
+			button.html(@savingHtml("Saving"))
 			baseUrl = @baseUrl
-			setTimeout( =>
+			setTimeout(=>
 				successCb = (question)=>
 					rQ = question.question
 					@questions.push(rQ)
@@ -127,7 +164,15 @@ class Faqify
 					$('#ask_question_li ').after(li)
 					button.html('Saved!')
 					button.after("<a href='#' id='go_to_new_question' data-question_id='#{rQ._id}'>Go to Question</a>")
-				errorCb = (a,b,c)-> console.log(a,b,c)
+				errorCb = ()->
+					currentColor = button.css('background-color')
+					button.css('background-color', '#FA4141')
+					button.html('Oops! Try Again')
+					setTimeout(->
+						button.css('background-color', currentColor)
+						button.html(currentText)
+					, 1000)
+
 				$.ajax {
 					url: "#{baseUrl}/questions"
 					data: data
@@ -144,22 +189,36 @@ class Faqify
 			description: $('textarea[name="faqify_description"]').val() or null
 			question_id: question_id
 		if data.description?
+			button = $(event.currentTarget)
+			currentText = button.html()
+			console.log(currentText)
+			button.html(@savingHtml("Saving"))
 			baseUrl = @baseUrl
-			successCb = (answer)=>
-				realAnswer = answer.answer
-				question = @findQuestion(question_id)
-				question.answers.push(realAnswer)
-				$('#view_question_modal .no_answers').remove()
-				answerLi = "<li><div class='faqify_arrow_right'>#{realAnswer.description}</li>"
-				$('#view_question_modal .answers').append(answerLi)
-			errorCb = (a,b,c)-> console.log(a,b,c)
-			$.ajax {
-				url: "#{baseUrl}/answers"
-				data: data
-				type: 'POST'
-				success: successCb
-				error: errorCb
-			}
+			setTimeout( =>
+				successCb = (answer)=>
+					realAnswer = answer.answer
+					question = @findQuestion(question_id)
+					question.answers.push(realAnswer)
+					$('#view_question_modal .no_answers').remove()
+					button.html('Saved!')
+					answerLi = "<li><div class='faqify_arrow_right'></div>#{realAnswer.description}</li>"
+					$('#view_question_modal .answers').append(answerLi)
+				errorCb = ->
+					currentColor = button.css('background-color')
+					button.css('background-color', '#FA4141')
+					button.html('Oops! Try Again')
+					setTimeout(->
+						button.css('background-color', currentColor)
+						button.html(currentText)
+					, 1000)
+				$.ajax {
+					url: "#{baseUrl}/answers"
+					data: data
+					type: 'POST'
+					success: successCb
+					error: errorCb
+				}
+			, 2000)
 
 	search: (event)->
 		search = $(event.currentTarget).val()
@@ -198,6 +257,7 @@ class Faqify
 		$(document).on('keyup', '#faqify_search', (event)=> @search(event))
 		$(document).on('click', '#faqify_refresh span', => @refresh())
 		$(document).on('click', '#go_to_new_question', (event)=> @openQuestion(event))
+		$(document).on('click', '#subscribe_button', (event)=> @saveSubscription(event))
 
 	populateList: (regex = new RegExp("()", "gi"))->
 		faqify_list = $('#faqify_list')

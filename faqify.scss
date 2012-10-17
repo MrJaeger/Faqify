@@ -288,19 +288,29 @@
 		width: 20px;
 		border: 1px solid black;
 	}
-	#ask_button, #answer_button {
+	#ask_button, #answer_button, #subscribe_button {
 		cursor: pointer;
 		border: none;
 		font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
-		font-size: 13px;
+		font-size: 12px;
 		margin: 0px;
 		color: white;
 		border-radius: 5px;
 		width: 100px;
 		height: 40px;
+	}
+	#ask_button, #answer_button {
 		background-color: #1DBF48;
 		&:active {
 			background-color: #0CA616;
+		}
+	}
+	#subscribe_button {
+		vertical-align: top;
+		margin-top: 2px;
+		background-color: #35B9DE;
+		&:active {
+			background-color: #3AA9CF;
 		}
 	}
 	#ask_question_modal {
@@ -350,6 +360,19 @@
 		h2 {
 			margin-bottom: 10px;
 		}
+		#subscribe_form {
+			label {
+				display: block;
+			}
+			input {
+				margin-left: 0px;
+				padding: 5px 0px 5px 5px;
+				border: 1px solid #D6D6D6;
+				outline: none;
+				border-radius: 5px;
+				font-size: 24px;
+			}
+		}
 		textarea {
 			padding: 5px;
 			font-size: 14px;
@@ -362,7 +385,7 @@
 			border: 1px solid #D6D6D6;
 			outline: none;
 		}
-		button {
+		#answer_button {
 			margin: 5px 0px 0px 0px;
 		}
 		.answers {

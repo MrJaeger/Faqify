@@ -4,7 +4,7 @@
 
   Faqify = (function() {
 
-    Faqify.prototype.baseUrl = 'http://tranquil-dusk-4165.herokuapp.com';
+    Faqify.prototype.baseUrl = 'http://localhost:8000';
 
     Faqify.prototype.isOpen = false;
 
@@ -40,7 +40,7 @@
 
     Faqify.prototype.viewQuestionHtml = function(question) {
       var html;
-      return html = "<div class='remove_modal'>X</div>		<div id='view_question_modal' data-question_id='" + question._id + "'>		<h2>Q: " + question.title + "</h2>		<p id='question_description'>" + question.description + "</p>		" + (question.answers.length === 0 ? '<p class="no_answers">No answers yet</p>' : '') + "		<ul class='answers'></ul>		<form>			<textarea placeholder='Post an answer' name='faqify_description'></textarea>			<button id='answer_button'>Post Answer</button>		</form>		</div>";
+      return html = "<div class='remove_modal'>X</div>		<div id='view_question_modal' data-question_id='" + question._id + "'>		<h2>Q: " + question.title + "</h2>		<p id='question_description'>" + question.description + "</p>		" + (question.answers.length === 0 ? '<p class="no_answers">No answers yet</p>' : '') + "		<ul class='answers'></ul>		<form>			<textarea placeholder='Post an answer' name='faqify_description'></textarea>			<button id='answer_button'>Post Answer</button>		</form>		<form id='subscribe_form'>			<input type='text' placeholder='Enter email here' name='faqify_subscribe' />			<button id='subscribe_button'>Subscribe</button>		</div>";
     };
 
     Faqify.prototype.loadingHtml = '\
@@ -51,14 +51,10 @@
 		</div>\
 	';
 
-    Faqify.prototype.savingHtml = '\
-		<div id="saving_animated">\
-			<span class="saving_dot">Saving</span>\
-			<span class="margin_left saving_dot">.</span>\
-			<span class="saving_dot">.</span>\
-			<span class="saving_dot">.</span>\
-		</div>\
-	';
+    Faqify.prototype.savingHtml = function(text) {
+      var html;
+      return html = "<div id='saving_animated'>			<span class='saving_dot'>" + text + "</span>			<span class='margin_left saving_dot'>.</span>			<span class='saving_dot'>.</span>			<span class='saving_dot'>.</span>		</div>		";
+    };
 
     function Faqify(apiKey) {
       this.apiKey = apiKey;
@@ -136,8 +132,51 @@
       return $('#faqify_modal_background').hide();
     };
 
+    Faqify.prototype.saveSubscription = function(event) {
+      var baseUrl, button, currentText, data, emailInput, question_id,
+        _this = this;
+      event.preventDefault();
+      question_id = $('#view_question_modal').data('question_id');
+      emailInput = $('input[name="faqify_subscribe"]');
+      data = {
+        email: emailInput.val() || null,
+        question_id: question_id
+      };
+      if (data.email != null) {
+        button = $(event.currentTarget);
+        currentText = button.html();
+        button.html(this.savingHtml("Subscribing"));
+        baseUrl = this.baseUrl;
+        return setTimeout(function() {
+          var errorCb, successCb;
+          successCb = function() {
+            emailInput.val('');
+            return button.html('Subscribed!');
+          };
+          errorCb = function(error) {
+            var currentColor, errorText;
+            currentColor = button.css('background-color');
+            button.css('background-color', '#FA4141');
+            errorText = error.status === 403 ? "Already Subscribed" : "Oops! Try Again";
+            button.html(errorText);
+            return setTimeout(function() {
+              button.css('background-color', currentColor);
+              return button.html(currentText);
+            }, 1000);
+          };
+          return $.ajax({
+            url: "" + baseUrl + "/emails",
+            data: data,
+            type: 'POST',
+            success: successCb,
+            error: errorCb
+          });
+        }, 2000);
+      }
+    };
+
     Faqify.prototype.saveQuestion = function(event) {
-      var baseUrl, button, data,
+      var baseUrl, button, currentText, data,
         _this = this;
       event.preventDefault();
       data = {
@@ -145,10 +184,10 @@
         description: $('textarea[name="faqify_description"]').val() || null,
         email: $('input[name="faqify_email"]').val()
       };
-      console.log();
       if ((data.title != null) && (data.description != null)) {
         button = $(event.currentTarget);
-        button.html(this.savingHtml);
+        currentText = button.html();
+        button.html(this.savingHtml("Saving"));
         baseUrl = this.baseUrl;
         return setTimeout(function() {
           var errorCb, successCb;
@@ -161,8 +200,15 @@
             button.html('Saved!');
             return button.after("<a href='#' id='go_to_new_question' data-question_id='" + rQ._id + "'>Go to Question</a>");
           };
-          errorCb = function(a, b, c) {
-            return console.log(a, b, c);
+          errorCb = function() {
+            var currentColor;
+            currentColor = button.css('background-color');
+            button.css('background-color', '#FA4141');
+            button.html('Oops! Try Again');
+            return setTimeout(function() {
+              button.css('background-color', currentColor);
+              return button.html(currentText);
+            }, 1000);
           };
           return $.ajax({
             url: "" + baseUrl + "/questions",
@@ -176,7 +222,7 @@
     };
 
     Faqify.prototype.saveAnswer = function(event) {
-      var baseUrl, data, errorCb, question_id, successCb,
+      var baseUrl, button, currentText, data, question_id,
         _this = this;
       event.preventDefault();
       question_id = $('#view_question_modal').data('question_id');
@@ -185,26 +231,41 @@
         question_id: question_id
       };
       if (data.description != null) {
+        button = $(event.currentTarget);
+        currentText = button.html();
+        console.log(currentText);
+        button.html(this.savingHtml("Saving"));
         baseUrl = this.baseUrl;
-        successCb = function(answer) {
-          var answerLi, question, realAnswer;
-          realAnswer = answer.answer;
-          question = _this.findQuestion(question_id);
-          question.answers.push(realAnswer);
-          $('#view_question_modal .no_answers').remove();
-          answerLi = "<li><div class='faqify_arrow_right'>" + realAnswer.description + "</li>";
-          return $('#view_question_modal .answers').append(answerLi);
-        };
-        errorCb = function(a, b, c) {
-          return console.log(a, b, c);
-        };
-        return $.ajax({
-          url: "" + baseUrl + "/answers",
-          data: data,
-          type: 'POST',
-          success: successCb,
-          error: errorCb
-        });
+        return setTimeout(function() {
+          var errorCb, successCb;
+          successCb = function(answer) {
+            var answerLi, question, realAnswer;
+            realAnswer = answer.answer;
+            question = _this.findQuestion(question_id);
+            question.answers.push(realAnswer);
+            $('#view_question_modal .no_answers').remove();
+            button.html('Saved!');
+            answerLi = "<li><div class='faqify_arrow_right'></div>" + realAnswer.description + "</li>";
+            return $('#view_question_modal .answers').append(answerLi);
+          };
+          errorCb = function() {
+            var currentColor;
+            currentColor = button.css('background-color');
+            button.css('background-color', '#FA4141');
+            button.html('Oops! Try Again');
+            return setTimeout(function() {
+              button.css('background-color', currentColor);
+              return button.html(currentText);
+            }, 1000);
+          };
+          return $.ajax({
+            url: "" + baseUrl + "/answers",
+            data: data,
+            type: 'POST',
+            success: successCb,
+            error: errorCb
+          });
+        }, 2000);
       }
     };
 
@@ -277,8 +338,11 @@
       $(document).on('click', '#faqify_refresh span', function() {
         return _this.refresh();
       });
-      return $(document).on('click', '#go_to_new_question', function(event) {
+      $(document).on('click', '#go_to_new_question', function(event) {
         return _this.openQuestion(event);
+      });
+      return $(document).on('click', '#subscribe_button', function(event) {
+        return _this.saveSubscription(event);
       });
     };
 
