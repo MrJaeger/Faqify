@@ -260,12 +260,15 @@
   #faqify_modal #ask_question_modal [name] {
     margin-bottom: 20px; }
   #faqify_modal #ask_question_modal input {
+    margin-left: 0px;
+    display: block;
     padding: 5px 0px 5px 5px;
     border: 1px solid #D6D6D6;
     outline: none;
     border-radius: 5px;
     font-size: 24px; }
   #faqify_modal #ask_question_modal textarea {
+    display: block;
     font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
     border-radius: 5px;
     border: 1px solid #D6D6D6;
@@ -273,7 +276,14 @@
     height: 200px;
     width: 400px; }
   #faqify_modal #ask_question_modal button {
-    display: block; }
+    float: left;
+    margin-bottom: 10px;
+    display: inline-block; }
+  #faqify_modal #ask_question_modal a {
+    color: #5A56D6;
+    text-decoration: none;
+    display: inline-block;
+    margin: 8px 0px 0px 10px; }
   #faqify_modal #view_question_modal h2 {
     margin-bottom: 10px; }
   #faqify_modal #view_question_modal textarea {

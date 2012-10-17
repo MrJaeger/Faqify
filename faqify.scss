@@ -317,6 +317,8 @@
 			margin-bottom: 20px;
 		}
 		input {
+			margin-left: 0px;
+			display: block;
 			padding: 5px 0px 5px 5px;
 			border: 1px solid #D6D6D6;
 			outline: none;
@@ -324,6 +326,7 @@
 			font-size: 24px;
 		}
 		textarea {
+			display: block;
 			font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 			border-radius: 5px;
 			border: 1px solid #D6D6D6;
@@ -332,7 +335,15 @@
 			width: 400px;
 		}
 		button {
-			display: block;
+			float: left;
+			margin-bottom: 10px;
+			display: inline-block;
+		}
+		a {
+			color: #5A56D6;
+			text-decoration: none;
+			display: inline-block;
+			margin: 8px 0px 0px 10px;
 		}
 	}
 	#view_question_modal {

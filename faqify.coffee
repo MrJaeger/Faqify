@@ -22,10 +22,12 @@ class Faqify
 		<div id="ask_question_modal">
 		<h1>Ask a Question</h1>
 		<form>
-			<label>Title</label>
-			<input type="text" name="faqify_title" />
-			<label>So what do you need to know?</label>
+			<label>Title *</label>
+			<input required type="text" name="faqify_title" />
+			<label>So what do you need to know? *</label>
 			<textarea name="faqify_description"></textarea>
+			<label>Notify me when this question is answered</label>
+			<input type="text" name="faqify_email" placeholder="Enter email here"/>
 			<button id="ask_button">Ask Question</button>
 		</form>
 		</div>'
@@ -109,50 +111,55 @@ class Faqify
 	saveQuestion: (event)->
 		event.preventDefault()
 		data =
-			title: $('input[name="faqify_title"]').val()
-			description: $('textarea[name="faqify_description"]').val()
-		button = $(event.currentTarget)
-		button.html(@savingHtml)
-		baseUrl = @baseUrl
-		setTimeout( =>
-			successCb = (question)=>
-				realQuestion = question.question
-				@questions.push(realQuestion)
-				li = "<li data-question_id='#{realQuestion._id}'>#{realQuestion.title}</li>"
-				$('#ask_question_li ').after(li)
-				button.html('Saved!')
-			errorCb = (a,b,c)-> console.log(a,b,c)
-			$.ajax {
-				url: "#{baseUrl}/questions"
-				data: data
-				type: 'POST'
-				success: successCb
-				error: errorCb
-			}
-		, 2000)
+			title: $('input[name="faqify_title"]').val() or null
+			description: $('textarea[name="faqify_description"]').val() or null
+			email: $('input[name="faqify_email"]').val()
+		console.log()
+		if data.title? and data.description?
+			button = $(event.currentTarget)
+			button.html(@savingHtml)
+			baseUrl = @baseUrl
+			setTimeout( =>
+				successCb = (question)=>
+					rQ = question.question
+					@questions.push(rQ)
+					li = "<li data-question_id='#{rQ._id}'>#{rQ.title}</li>"
+					$('#ask_question_li ').after(li)
+					button.html('Saved!')
+					button.after("<a href='#' id='go_to_new_question' data-question_id='#{rQ._id}'>Go to Question</a>")
+				errorCb = (a,b,c)-> console.log(a,b,c)
+				$.ajax {
+					url: "#{baseUrl}/questions"
+					data: data
+					type: 'POST'
+					success: successCb
+					error: errorCb
+				}
+			, 2000)
 
 	saveAnswer: (event)->
 		event.preventDefault()
 		question_id = $('#view_question_modal').data('question_id')
 		data =
-			description: $('textarea[name="faqify_description"]').val()
+			description: $('textarea[name="faqify_description"]').val() or null
 			question_id: question_id
-		baseUrl = @baseUrl
-		successCb = (answer)=>
-			realAnswer = answer.answer
-			question = @findQuestion(question_id)
-			question.answers.push(realAnswer)
-			$('#view_question_modal .no_answers').remove()
-			answerLi = "<li><div class='faqify_arrow_right'>#{realAnswer.description}</li>"
-			$('#view_question_modal .answers').append(answerLi)
-		errorCb = (a,b,c)-> console.log(a,b,c)
-		$.ajax {
-			url: "#{baseUrl}/answers"
-			data: data
-			type: 'POST'
-			success: successCb
-			error: errorCb
-		}
+		if data.description?
+			baseUrl = @baseUrl
+			successCb = (answer)=>
+				realAnswer = answer.answer
+				question = @findQuestion(question_id)
+				question.answers.push(realAnswer)
+				$('#view_question_modal .no_answers').remove()
+				answerLi = "<li><div class='faqify_arrow_right'>#{realAnswer.description}</li>"
+				$('#view_question_modal .answers').append(answerLi)
+			errorCb = (a,b,c)-> console.log(a,b,c)
+			$.ajax {
+				url: "#{baseUrl}/answers"
+				data: data
+				type: 'POST'
+				success: successCb
+				error: errorCb
+			}
 
 	search: (event)->
 		search = $(event.currentTarget).val()
@@ -175,9 +182,14 @@ class Faqify
 			) 
 		, 1000)
 
+	openQuestion: (event)->
+		event.preventDefault()
+		id = $(event.currentTarget).data('question_id')
+		$("#faqify li[data-question_id='#{id}']").click()
+
 	bindEvents: ->
-		$('#faqify_header').on('click', => if @isOpen is false then @open() else @close())
-		$('#faqify_modal_background').on('click', => @closeModal())
+		$(document).on('click', '#faqify_header', => if @isOpen is false then @open() else @close())
+		$(document).on('click', '#faqify_modal_background', => @closeModal())
 		$(document).on('click', '#ask_question', => @askQuestion())
 		$(document).on('click', '#ask_question_modal button', (event)=> @saveQuestion(event))
 		$(document).on('click', '.remove_modal', => @closeModal())
@@ -185,6 +197,7 @@ class Faqify
 		$(document).on('click', '#view_question_modal button', (event)=> @saveAnswer(event))
 		$(document).on('keyup', '#faqify_search', (event)=> @search(event))
 		$(document).on('click', '#faqify_refresh span', => @refresh())
+		$(document).on('click', '#go_to_new_question', (event)=> @openQuestion(event))
 
 	populateList: (regex = new RegExp("()", "gi"))->
 		faqify_list = $('#faqify_list')

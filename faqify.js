@@ -28,10 +28,12 @@
 		<div id="ask_question_modal">\
 		<h1>Ask a Question</h1>\
 		<form>\
-			<label>Title</label>\
-			<input type="text" name="faqify_title" />\
-			<label>So what do you need to know?</label>\
+			<label>Title *</label>\
+			<input required type="text" name="faqify_title" />\
+			<label>So what do you need to know? *</label>\
 			<textarea name="faqify_description"></textarea>\
+			<label>Notify me when this question is answered</label>\
+			<input type="text" name="faqify_email" placeholder="Enter email here"/>\
 			<button id="ask_button">Ask Question</button>\
 		</form>\
 		</div>';
@@ -139,33 +141,38 @@
         _this = this;
       event.preventDefault();
       data = {
-        title: $('input[name="faqify_title"]').val(),
-        description: $('textarea[name="faqify_description"]').val()
+        title: $('input[name="faqify_title"]').val() || null,
+        description: $('textarea[name="faqify_description"]').val() || null,
+        email: $('input[name="faqify_email"]').val()
       };
-      button = $(event.currentTarget);
-      button.html(this.savingHtml);
-      baseUrl = this.baseUrl;
-      return setTimeout(function() {
-        var errorCb, successCb;
-        successCb = function(question) {
-          var li, realQuestion;
-          realQuestion = question.question;
-          _this.questions.push(realQuestion);
-          li = "<li data-question_id='" + realQuestion._id + "'>" + realQuestion.title + "</li>";
-          $('#ask_question_li ').after(li);
-          return button.html('Saved!');
-        };
-        errorCb = function(a, b, c) {
-          return console.log(a, b, c);
-        };
-        return $.ajax({
-          url: "" + baseUrl + "/questions",
-          data: data,
-          type: 'POST',
-          success: successCb,
-          error: errorCb
-        });
-      }, 2000);
+      console.log();
+      if ((data.title != null) && (data.description != null)) {
+        button = $(event.currentTarget);
+        button.html(this.savingHtml);
+        baseUrl = this.baseUrl;
+        return setTimeout(function() {
+          var errorCb, successCb;
+          successCb = function(question) {
+            var li, rQ;
+            rQ = question.question;
+            _this.questions.push(rQ);
+            li = "<li data-question_id='" + rQ._id + "'>" + rQ.title + "</li>";
+            $('#ask_question_li ').after(li);
+            button.html('Saved!');
+            return button.after("<a href='#' id='go_to_new_question' data-question_id='" + rQ._id + "'>Go to Question</a>");
+          };
+          errorCb = function(a, b, c) {
+            return console.log(a, b, c);
+          };
+          return $.ajax({
+            url: "" + baseUrl + "/questions",
+            data: data,
+            type: 'POST',
+            success: successCb,
+            error: errorCb
+          });
+        }, 2000);
+      }
     };
 
     Faqify.prototype.saveAnswer = function(event) {
@@ -174,29 +181,31 @@
       event.preventDefault();
       question_id = $('#view_question_modal').data('question_id');
       data = {
-        description: $('textarea[name="faqify_description"]').val(),
+        description: $('textarea[name="faqify_description"]').val() || null,
         question_id: question_id
       };
-      baseUrl = this.baseUrl;
-      successCb = function(answer) {
-        var answerLi, question, realAnswer;
-        realAnswer = answer.answer;
-        question = _this.findQuestion(question_id);
-        question.answers.push(realAnswer);
-        $('#view_question_modal .no_answers').remove();
-        answerLi = "<li><div class='faqify_arrow_right'>" + realAnswer.description + "</li>";
-        return $('#view_question_modal .answers').append(answerLi);
-      };
-      errorCb = function(a, b, c) {
-        return console.log(a, b, c);
-      };
-      return $.ajax({
-        url: "" + baseUrl + "/answers",
-        data: data,
-        type: 'POST',
-        success: successCb,
-        error: errorCb
-      });
+      if (data.description != null) {
+        baseUrl = this.baseUrl;
+        successCb = function(answer) {
+          var answerLi, question, realAnswer;
+          realAnswer = answer.answer;
+          question = _this.findQuestion(question_id);
+          question.answers.push(realAnswer);
+          $('#view_question_modal .no_answers').remove();
+          answerLi = "<li><div class='faqify_arrow_right'>" + realAnswer.description + "</li>";
+          return $('#view_question_modal .answers').append(answerLi);
+        };
+        errorCb = function(a, b, c) {
+          return console.log(a, b, c);
+        };
+        return $.ajax({
+          url: "" + baseUrl + "/answers",
+          data: data,
+          type: 'POST',
+          success: successCb,
+          error: errorCb
+        });
+      }
     };
 
     Faqify.prototype.search = function(event) {
@@ -228,16 +237,23 @@
       }, 1000);
     };
 
+    Faqify.prototype.openQuestion = function(event) {
+      var id;
+      event.preventDefault();
+      id = $(event.currentTarget).data('question_id');
+      return $("#faqify li[data-question_id='" + id + "']").click();
+    };
+
     Faqify.prototype.bindEvents = function() {
       var _this = this;
-      $('#faqify_header').on('click', function() {
+      $(document).on('click', '#faqify_header', function() {
         if (_this.isOpen === false) {
           return _this.open();
         } else {
           return _this.close();
         }
       });
-      $('#faqify_modal_background').on('click', function() {
+      $(document).on('click', '#faqify_modal_background', function() {
         return _this.closeModal();
       });
       $(document).on('click', '#ask_question', function() {
@@ -258,8 +274,11 @@
       $(document).on('keyup', '#faqify_search', function(event) {
         return _this.search(event);
       });
-      return $(document).on('click', '#faqify_refresh span', function() {
+      $(document).on('click', '#faqify_refresh span', function() {
         return _this.refresh();
+      });
+      return $(document).on('click', '#go_to_new_question', function(event) {
+        return _this.openQuestion(event);
       });
     };
 
