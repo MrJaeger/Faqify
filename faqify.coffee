@@ -8,7 +8,10 @@ class Faqify
 			<div class="arrow_up"></div>
 		</div>
 		<div id="faqify_actions">
-			<span>Ask a Question!</span>
+			<input type="text" placeholder="Search..." id="faqify_search" />
+			<div id="faqify_refresh">
+				<span>Refresh</span>
+			</div>
 		</div>
 		<ul id="faqify_list"></ul>
 	</div>
@@ -31,8 +34,7 @@ class Faqify
 		html = "<div class='remove_modal'>X</div>
 		<div id='view_question_modal' data-question_id='#{question._id}'>
 		<h2>Q: #{question.title}</h2>
-		<p>#{question.description}</p>
-		<h2 class='answer_header'>Answers</h2>
+		<p id='question_description'>#{question.description}</p>
 		#{if question.answers.length is 0 then '<p class="no_answers">No answers yet</p>' else ''}
 		<ul class='answers'></ul>
 		<form>
@@ -40,6 +42,23 @@ class Faqify
 			<button id='answer_button'>Post Answer</button>
 		</form>
 		</div>"
+
+	loadingHtml: '
+		<div id="circleG">
+			<div id="circleG_1" class="circleG"></div>
+			<div id="circleG_2" class="circleG"></div>
+			<div id="circleG_3" class="circleG"></div>
+		</div>
+	'
+
+	savingHtml: '
+		<div id="saving_animated">
+			<span class="saving_dot">Saving</span>
+			<span class="margin_left saving_dot">.</span>
+			<span class="saving_dot">.</span>
+			<span class="saving_dot">.</span>
+		</div>
+	'
 
 	constructor: (@apiKey)->
 		$('body').append(@baseHtml)
@@ -92,22 +111,25 @@ class Faqify
 		data =
 			title: $('input[name="faqify_title"]').val()
 			description: $('textarea[name="faqify_description"]').val()
+		button = $(event.currentTarget)
+		button.html(@savingHtml)
 		baseUrl = @baseUrl
-		successCb = (question)=>
-			realQuestion = question.question
-			@questions.push(realQuestion)
-			li = "<li data-question_id='#{realQuestion._id}'>#{realQuestion.title}</li>"
-			$('#faqify_list').prepend(li)
-			@close()
-			$("#faqify li[data-question_id='#{realQuestion._id}']").click()
-		errorCb = (a,b,c)-> console.log(a,b,c)
-		$.ajax {
-			url: "#{baseUrl}/questions"
-			data: data
-			type: 'POST'
-			success: successCb
-			error: errorCb
-		}
+		setTimeout( =>
+			successCb = (question)=>
+				realQuestion = question.question
+				@questions.push(realQuestion)
+				li = "<li data-question_id='#{realQuestion._id}'>#{realQuestion.title}</li>"
+				$('#ask_question_li ').after(li)
+				button.html('Saved!')
+			errorCb = (a,b,c)-> console.log(a,b,c)
+			$.ajax {
+				url: "#{baseUrl}/questions"
+				data: data
+				type: 'POST'
+				success: successCb
+				error: errorCb
+			}
+		, 2000)
 
 	saveAnswer: (event)->
 		event.preventDefault()
@@ -132,19 +154,47 @@ class Faqify
 			error: errorCb
 		}
 
+	search: (event)->
+		search = $(event.currentTarget).val()
+		searchTerms = search.split(' ')
+		searchRegEx = ""
+		for term in searchTerms
+			if term != "" then searchRegEx += "(#{term})|"
+		searchRegEx = searchRegEx.substring(0, searchRegEx.length-1)
+		@populateList(new RegExp(searchRegEx, "gi"))
+
+	refresh: ->
+		@close()
+		$('#faqify_header .arrow_up').remove()
+		$('#faqify_header').append(@loadingHtml)
+		setTimeout(=> 
+			@getQuestions().then(=>
+				$('#faqify_header #circleG').remove()
+				$('#faqify_header').append('<div class="arrow_down"></div>')
+				@open()
+			) 
+		, 1000)
+
 	bindEvents: ->
 		$('#faqify_header').on('click', => if @isOpen is false then @open() else @close())
-		$('#faqify_actions span').on('click', => @askQuestion())
 		$('#faqify_modal_background').on('click', => @closeModal())
+		$(document).on('click', '#ask_question', => @askQuestion())
 		$(document).on('click', '#ask_question_modal button', (event)=> @saveQuestion(event))
 		$(document).on('click', '.remove_modal', => @closeModal())
-		$(document).on('click', '#faqify_list li', (event)=> @viewQuestion(event))
+		$(document).on('click', '#faqify_list li:not(:first-child)', (event)=> @viewQuestion(event))
 		$(document).on('click', '#view_question_modal button', (event)=> @saveAnswer(event))
+		$(document).on('keyup', '#faqify_search', (event)=> @search(event))
+		$(document).on('click', '#faqify_refresh span', => @refresh())
 
-	populateList: ->
+	populateList: (regex = new RegExp("()", "gi"))->
+		faqify_list = $('#faqify_list')
+		faqify_list.html('')
+		askQuestionLi = "<li id='ask_question_li'><span id='ask_question'>Ask a Question!</span></li>"
+		faqify_list.append(askQuestionLi)
 		for question in @questions
-			li = "<li data-question_id='#{question._id}'>#{question.title}</li>"
-			$('#faqify_list').append(li)
+			if regex.test(question.title)
+				li = "<li data-question_id='#{question._id}'>#{question.title}</li>"
+				faqify_list.append(li)
 
 	getQuestions: ->
 		baseUrl = @baseUrl

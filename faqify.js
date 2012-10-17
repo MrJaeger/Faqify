@@ -14,7 +14,10 @@
 			<div class="arrow_up"></div>\
 		</div>\
 		<div id="faqify_actions">\
-			<span>Ask a Question!</span>\
+			<input type="text" placeholder="Search..." id="faqify_search" />\
+			<div id="faqify_refresh">\
+				<span>Refresh</span>\
+			</div>\
 		</div>\
 		<ul id="faqify_list"></ul>\
 	</div>\
@@ -35,8 +38,25 @@
 
     Faqify.prototype.viewQuestionHtml = function(question) {
       var html;
-      return html = "<div class='remove_modal'>X</div>		<div id='view_question_modal' data-question_id='" + question._id + "'>		<h2>Q: " + question.title + "</h2>		<p>" + question.description + "</p>		<h2 class='answer_header'>Answers</h2>		" + (question.answers.length === 0 ? '<p class="no_answers">No answers yet</p>' : '') + "		<ul class='answers'></ul>		<form>			<textarea placeholder='Post an answer' name='faqify_description'></textarea>			<button id='answer_button'>Post Answer</button>		</form>		</div>";
+      return html = "<div class='remove_modal'>X</div>		<div id='view_question_modal' data-question_id='" + question._id + "'>		<h2>Q: " + question.title + "</h2>		<p id='question_description'>" + question.description + "</p>		" + (question.answers.length === 0 ? '<p class="no_answers">No answers yet</p>' : '') + "		<ul class='answers'></ul>		<form>			<textarea placeholder='Post an answer' name='faqify_description'></textarea>			<button id='answer_button'>Post Answer</button>		</form>		</div>";
     };
+
+    Faqify.prototype.loadingHtml = '\
+		<div id="circleG">\
+			<div id="circleG_1" class="circleG"></div>\
+			<div id="circleG_2" class="circleG"></div>\
+			<div id="circleG_3" class="circleG"></div>\
+		</div>\
+	';
+
+    Faqify.prototype.savingHtml = '\
+		<div id="saving_animated">\
+			<span class="saving_dot">Saving</span>\
+			<span class="margin_left saving_dot">.</span>\
+			<span class="saving_dot">.</span>\
+			<span class="saving_dot">.</span>\
+		</div>\
+	';
 
     function Faqify(apiKey) {
       this.apiKey = apiKey;
@@ -115,33 +135,37 @@
     };
 
     Faqify.prototype.saveQuestion = function(event) {
-      var baseUrl, data, errorCb, successCb,
+      var baseUrl, button, data,
         _this = this;
       event.preventDefault();
       data = {
         title: $('input[name="faqify_title"]').val(),
         description: $('textarea[name="faqify_description"]').val()
       };
+      button = $(event.currentTarget);
+      button.html(this.savingHtml);
       baseUrl = this.baseUrl;
-      successCb = function(question) {
-        var li, realQuestion;
-        realQuestion = question.question;
-        _this.questions.push(realQuestion);
-        li = "<li data-question_id='" + realQuestion._id + "'>" + realQuestion.title + "</li>";
-        $('#faqify_list').prepend(li);
-        _this.close();
-        return $("#faqify li[data-question_id='" + realQuestion._id + "']").click();
-      };
-      errorCb = function(a, b, c) {
-        return console.log(a, b, c);
-      };
-      return $.ajax({
-        url: "" + baseUrl + "/questions",
-        data: data,
-        type: 'POST',
-        success: successCb,
-        error: errorCb
-      });
+      return setTimeout(function() {
+        var errorCb, successCb;
+        successCb = function(question) {
+          var li, realQuestion;
+          realQuestion = question.question;
+          _this.questions.push(realQuestion);
+          li = "<li data-question_id='" + realQuestion._id + "'>" + realQuestion.title + "</li>";
+          $('#ask_question_li ').after(li);
+          return button.html('Saved!');
+        };
+        errorCb = function(a, b, c) {
+          return console.log(a, b, c);
+        };
+        return $.ajax({
+          url: "" + baseUrl + "/questions",
+          data: data,
+          type: 'POST',
+          success: successCb,
+          error: errorCb
+        });
+      }, 2000);
     };
 
     Faqify.prototype.saveAnswer = function(event) {
@@ -175,6 +199,35 @@
       });
     };
 
+    Faqify.prototype.search = function(event) {
+      var search, searchRegEx, searchTerms, term, _i, _len;
+      search = $(event.currentTarget).val();
+      searchTerms = search.split(' ');
+      searchRegEx = "";
+      for (_i = 0, _len = searchTerms.length; _i < _len; _i++) {
+        term = searchTerms[_i];
+        if (term !== "") {
+          searchRegEx += "(" + term + ")|";
+        }
+      }
+      searchRegEx = searchRegEx.substring(0, searchRegEx.length - 1);
+      return this.populateList(new RegExp(searchRegEx, "gi"));
+    };
+
+    Faqify.prototype.refresh = function() {
+      var _this = this;
+      this.close();
+      $('#faqify_header .arrow_up').remove();
+      $('#faqify_header').append(this.loadingHtml);
+      return setTimeout(function() {
+        return _this.getQuestions().then(function() {
+          $('#faqify_header #circleG').remove();
+          $('#faqify_header').append('<div class="arrow_down"></div>');
+          return _this.open();
+        });
+      }, 1000);
+    };
+
     Faqify.prototype.bindEvents = function() {
       var _this = this;
       $('#faqify_header').on('click', function() {
@@ -184,11 +237,11 @@
           return _this.close();
         }
       });
-      $('#faqify_actions span').on('click', function() {
-        return _this.askQuestion();
-      });
       $('#faqify_modal_background').on('click', function() {
         return _this.closeModal();
+      });
+      $(document).on('click', '#ask_question', function() {
+        return _this.askQuestion();
       });
       $(document).on('click', '#ask_question_modal button', function(event) {
         return _this.saveQuestion(event);
@@ -196,22 +249,39 @@
       $(document).on('click', '.remove_modal', function() {
         return _this.closeModal();
       });
-      $(document).on('click', '#faqify_list li', function(event) {
+      $(document).on('click', '#faqify_list li:not(:first-child)', function(event) {
         return _this.viewQuestion(event);
       });
-      return $(document).on('click', '#view_question_modal button', function(event) {
+      $(document).on('click', '#view_question_modal button', function(event) {
         return _this.saveAnswer(event);
+      });
+      $(document).on('keyup', '#faqify_search', function(event) {
+        return _this.search(event);
+      });
+      return $(document).on('click', '#faqify_refresh span', function() {
+        return _this.refresh();
       });
     };
 
-    Faqify.prototype.populateList = function() {
-      var li, question, _i, _len, _ref, _results;
+    Faqify.prototype.populateList = function(regex) {
+      var askQuestionLi, faqify_list, li, question, _i, _len, _ref, _results;
+      if (regex == null) {
+        regex = new RegExp("()", "gi");
+      }
+      faqify_list = $('#faqify_list');
+      faqify_list.html('');
+      askQuestionLi = "<li id='ask_question_li'><span id='ask_question'>Ask a Question!</span></li>";
+      faqify_list.append(askQuestionLi);
       _ref = this.questions;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         question = _ref[_i];
-        li = "<li data-question_id='" + question._id + "'>" + question.title + "</li>";
-        _results.push($('#faqify_list').append(li));
+        if (regex.test(question.title)) {
+          li = "<li data-question_id='" + question._id + "'>" + question.title + "</li>";
+          _results.push(faqify_list.append(li));
+        } else {
+          _results.push(void 0);
+        }
       }
       return _results;
     };
